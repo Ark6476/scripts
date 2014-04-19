@@ -1,0 +1,4 @@
+#!/bin/bash
+output_host=$1
+
+arecord -f dat | ssh $output_host "aplay -f dat"

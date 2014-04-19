@@ -1,0 +1,30 @@
+#!/usr/bin/sbcl --noinform
+
+(defun get-quote-list ()
+  (let ((quotes (list)))
+    (with-open-file (stream "~/quotes")
+      (do ((line (read-line stream nil)
+		 (read-line stream nil))
+	   (current-quote ""))
+	  ((null line))
+	;(push line quotes)))
+	(cond
+	 ((string= (string-trim " " line) "")
+	  (push (concatenate 'string current-quote (list #\Newline)) quotes)
+	  (setf current-quote ""))
+	 ((string= current-quote "") (setf current-quote line))
+	 (t (setf current-quote (concatenate 'string current-quote (list #\Newline) line))))))
+    quotes))
+
+(defun get-random-quote (quotes)
+  (nth (random (length quotes) (make-random-state t)) quotes))
+
+(defun set-login-quote (quote)
+  (with-open-file (stream "~/.loginquote" :direction :output :if-exists :supersede)
+    (format stream quote)))
+
+(defun main ()
+  (let ((quotes (get-quote-list)))
+    (set-login-quote (get-random-quote quotes))))
+
+(main)

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+function format_file {
+	xml_file=$1
+	tmp_file="/tmp/$xml_file.formatted"
+	
+	xmllint --format $xml_file > $tmp_file || exit 1
+	
+	mv $tmp_file $xml_file
+	rm -f $tmp_file
+}
+
+for file in $@
+do
+        format_file $file
+done

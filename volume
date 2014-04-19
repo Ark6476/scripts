@@ -1,0 +1,62 @@
+#!/bin/bash
+#Pulseaudio volume control
+
+VOL_DELTA="2000" #How much to change the volume by. Currently set to 3%
+MAX_VOL="0x10000"
+#device="alsa_output.pci-0000_00_1b.0.analog-stereo"
+device="`pacmd dump | grep set-default-sink | awk '{ print $2 }'`"
+
+#Change volume by given amount
+function change_volume {
+	current_volume=`pacmd dump | grep "set-sink-volume $device" | grep -o "0x[0-9a-f]*"`
+	let new_volume="$current_volume+$1"
+	if (( $new_volume > $MAX_VOL ))
+	then
+		pactl set-sink-volume $device $MAX_VOL
+	elif (( $new_volume < 0 ))
+	then
+		pactl set-sink-volume $device 0
+	else
+		pactl set-sink-volume $device $new_volume
+	fi
+}
+
+case "$1" in
+	"up")    # increase volume
+		change_volume $VOL_DELTA
+		;;
+	"down")  # decrease volume
+		change_volume "-$VOL_DELTA"
+		;;
+	"mute")  # toggle mute
+		device_mute=`pacmd dump | grep "set-sink-mute $device" | grep -oE "(yes|no)"`
+		if [ "$device_mute" = "no" ]
+		then
+			pactl set-sink-mute $device "yes"
+		elif [ "$device_mute" = "yes" ]
+		then
+			pactl set-sink-mute $device "no"
+		fi
+		;;
+	"")
+		;;
+	*)
+		current_volume=`pacmd dump | grep "set-sink-volume $device" | grep -o "0x[0-9a-f]*"`
+		current_percent=`echo "scale=2; $(($current_volume))/$(($MAX_VOL))*100" | bc | sed -r "s/\.[0-9]*$//g"`
+		target_percent=$1
+		delta_percent=`echo "$target_percent-$current_percent" | bc`
+		change=`echo "scale=2; ($delta_percent/100)*$(($MAX_VOL))" | bc | sed -r "s/\.[0-9]*$//g"`
+		change_volume $change
+		;;
+esac
+
+
+current_volume=`pacmd dump | grep "set-sink-volume $device" | grep -o "0x[0-9a-f]*"`
+percent=`echo "scale=2; $(($current_volume))/$(($MAX_VOL))*100" | bc | sed -r "s/\.[0-9]*$//g"`
+mute_info=""
+device_mute=`pacmd dump | grep "set-sink-mute $device" | grep -oE "(yes|no)"`
+if [ "$device_mute" = "yes" ]
+then
+	mute_info=" -Muted"
+fi
+echo "$current_volume/$MAX_VOL ($percent%) $mute_info"

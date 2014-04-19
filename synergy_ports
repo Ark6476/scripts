@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+#Synergy traffic is not encrypted so it's a good idea to run it through an ssh tunnel
+
+synergy_host=$1
+
+autossh -M 24800 -f $synergy_host -N -L 24800:localhost:24800
+synergyc localhost

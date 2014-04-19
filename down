@@ -1,0 +1,21 @@
+#!/bin/sh
+reset
+if test $1
+then x=$1
+else echo No shutdown time provided. Defaulting to 2 hours.
+x=2h
+fi
+
+echo Current time: `date`. Will Go to sleep in $x
+sleep $x
+wii_up=`fping wii`
+while [ "$wii_up" == "wii is alive" ]
+do
+	echo "Wii is alive. Delaying shutdown"
+	sleep 10m
+	wii_up=`fping wii`
+done
+
+echo Goodnight, world!
+sleep 10s
+poweroff

@@ -1,0 +1,12 @@
+#!/bin/sh
+#Script for blueproximity to run
+
+command=$1
+
+if [ "$command" == "lock" ] ; then
+	qdbus org.freedesktop.ScreenSaver /ScreenSaver Lock
+elif [ "$command" == "unlock" ] ; then
+	#pgrep kscreenlocker | xargs kill
+	qdbus org.freedesktop.ScreenSaver /ScreenSaver SetActive 0
+	qdbus | grep kscreenlocker | sed 's/org.kde.//' | xargs kquitapp #Workaround for kde bug https://bugs.kde.org/show_bug.cgi?id=314989
+fi
