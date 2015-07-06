@@ -1,0 +1,25 @@
+#!/bin/sh
+# cd to the last directory of the last argument of the previous command.
+# examples:
+#   mkdir /tmp/a/new/dir = cd to dir
+#   cp foo /tmp/bar/baz : cd to bar
+
+last_command=($(fc -ln -1))
+success=0
+
+for (( idx=${#last_command[@]} ; idx>=2 ; idx-- )) ; do
+    arg="${last_command[idx]}"
+    if [ -f $arg ]; then
+        arg=$(dirname $arg)
+    fi
+    if [ -d $arg ]; then
+        cd $arg
+        success=1
+        break
+    fi
+done
+
+if [ $success -eq 0 ]; then
+    echo "No directory found in previous command: $last_command" >&2
+fi
+
